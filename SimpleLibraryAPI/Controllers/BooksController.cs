@@ -1,99 +1,53 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SimpleLibraryAPI.Models;
+using SimpleLibraryAPI.Services;
 
 namespace SimpleLibraryAPI.Controllers
 {
-    [Route("api/[controller]")] // This makes the URL: api/books
+    [Route("api/[controller]")]
     [ApiController]
     public class BooksController : ControllerBase
     {
-        // Our "Fake Database"
-        private static List<Book> books = new List<Book> { };
+        private readonly BookService _bookService;
 
-
-        // This is a "GET" request - it just reads the data
-        [HttpGet]
-        public List<Book> Get()
+        public BooksController()
         {
-            return books;
+            _bookService = new BookService();
         }
+
+        [HttpGet]
+        public List<Book> Get() => _bookService.GetAllBooks();
+
+        [HttpGet("{title}")]
+        public Book Get(string title) => _bookService.GetByTitle(title);
+
         [HttpPost]
         public string Post(Book newBook)
         {
-            if (books.Any(item => item.BookTitle == newBook.BookTitle))
-            {
-                return $"Sorry, '{newBook.BookTitle}' is already in the API list, so it cannot be added again.";
-            }
-            if (newBook.Stock < 0)
-            {
-                return $"Sorry, '{newBook.BookTitle}' cannot be added to the API list because stock cannot be negative.";
-            }
-            books.Add(newBook);
+            var result = _bookService.AddBook(newBook);
 
-            // If 'BookTitle' is red, ensure it is spelled exactly 
-            // the same way in your Book.cs file!
-            return $"Success! '{newBook.BookTitle}' has been added to the API list.";
+            return result switch
+            {
+                "Duplicate" => $"Sorry, '{newBook.BookTitle}' is already in the list.",
+                "NegativeStock" => "Stock cannot be negative.",
+                _ => $"Success! '{newBook.BookTitle}' added."
+            };
         }
 
-        [HttpGet("{title}")]
-        public Book Get(string title) // Changed return type from string to Book
-        {
-            var isBookExist = books.FirstOrDefault(b => b.BookTitle.Equals(title, StringComparison.OrdinalIgnoreCase));
-
-            // If found, return the whole object. If not, return null.
-            return isBookExist;
-        }
-
-        [HttpDelete("{title}")]
-        public string Delete(string title)
-        {
-            // FIX: Again, search the 'BookTitle' property specifically
-            var bookToDelete = books.FirstOrDefault(b => b.BookTitle.Equals(title, StringComparison.OrdinalIgnoreCase));
-
-            if (bookToDelete != null)
-            {
-                books.Remove(bookToDelete);
-                return $"Success! '{bookToDelete.BookTitle}' has been removed from the API list.";
-            }
-            else
-            {
-                return $"Sorry, '{title}' is not in the API list, so it cannot be deleted.";
-            }
-        }
         [HttpPut("{title}")]
         public string Put(string title, int newStock)
         {
-            var bookToAddStock = books.FirstOrDefault(b => b.BookTitle.Equals(title, StringComparison.OrdinalIgnoreCase));
-            if (bookToAddStock != null)
-            {
-                bookToAddStock.Stock = newStock; // Update the stock of the found book
-                return $"Success! '{bookToAddStock.BookTitle}' stock updated to {newStock}.";
-            }
-            else
-            {
-                return $"Sorry, '{title}' is not in the API list, so its stock cannot be updated.";
-            }
+            var success = _bookService.UpdateStock(title, newStock);
+            return success ? "Stock updated!" : $"'{title}' not found.";
         }
-        [HttpDelete("{title}/passcode")]
-        public string DeleteWithPasscode(string title, string passcode)
-        {
-            if (passcode != "admin123")
-            {
-                return $"Unauthorized: Incorrect passcode. '{title}' cannot be deleted.";
-            }
-            var bookToDelete = books.FirstOrDefault(b => b.BookTitle.Equals(title, StringComparison.OrdinalIgnoreCase));
-                
-            if (bookToDelete != null)
-            {
-                books.Remove(bookToDelete);
-                return $"Success! '{bookToDelete.BookTitle}' has been removed from the API list.";
-            }
-            else
-            {
-                return $"Sorry, '{title}' is not in the API list, so it cannot be deleted.";
-            }
-        }
-            
-    }
 
+        [HttpDelete("{title}/{passcode}")]
+        public string Delete(string title, string passcode)
+        {
+            if (passcode != "admin123") return "Unauthorized!";
+
+            var success = _bookService.DeleteBook(title);
+            return success ? "Book removed." : "Book not found.";
+        }
+    }
 }
