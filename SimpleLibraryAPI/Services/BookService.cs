@@ -29,27 +29,27 @@ namespace SimpleLibraryAPI.Services
             if (_books.Any(b => b.BookTitle.Equals(newBook.BookTitle, StringComparison.OrdinalIgnoreCase)))
                 return "Duplicate";
 
-            if (newBook.Stock <= 0)
-                return "NegativeStock";
+            if (newBook.Stock <= 0) return "NegativeStock";
 
             newBook.MaxStock = newBook.Stock;
             _books.Add(newBook);
+
+            // Logic: Log the addition
+            LogActivity("Add", newBook.BookTitle, $"Initial inventory of {newBook.Stock} copies added.");
             return "Success";
         }
 
         // update stock
         public Book? AdminExpansion(string title, int amountToAdd)
         {
-            // 1. Find the book in your static list
-            var book = _books.FirstOrDefault(b => b.BookTitle.Equals(title, StringComparison.OrdinalIgnoreCase));
-
+            var book = GetByTitle(title);
             if (book == null) return null;
 
-            // 2. Scenario 2 Logic: Add to both current and max
-            // If you had 4/5 and add 5, you now have 9/10
             book.Stock += amountToAdd;
             book.MaxStock += amountToAdd;
 
+            // Logic: Log the expansion
+            LogActivity("Admin Expansion", title, $"Inventory expanded by {amountToAdd} copies.");
             return book;
         }
 
@@ -88,17 +88,20 @@ namespace SimpleLibraryAPI.Services
             var book = GetByTitle(title);
             if (book == null) return "NotFound";
 
-            // THE STRICT CHECK: Is this specific ID in the list for THIS book?
             if (!book.CurrentBorrowerIds.Contains(userId))
             {
                 return "NotTheBorrower";
             }
 
-            // Success logic
-            book.Stock++;
-            book.CurrentBorrowerIds.Remove(userId); // Remove that specific "link"
+            // Identify the user for the history details
+            var user = _users.FirstOrDefault(u => u.UserId == userId);
+            string userName = user?.FullName ?? "Unknown User";
 
-            LogActivity("Return", title, $"Returned by User ID: {userId}", userId);
+            book.Stock++;
+            book.CurrentBorrowerIds.Remove(userId);
+
+            // Logic: Log the return with the user's name
+            LogActivity("Return", title, $"Returned by {userName} (ID: {userId})", userId);
             return "Success";
         }
 
