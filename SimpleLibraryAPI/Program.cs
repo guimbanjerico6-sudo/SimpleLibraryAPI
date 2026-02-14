@@ -1,4 +1,3 @@
-
 namespace SimpleLibraryAPI
 {
     public class Program
@@ -7,16 +6,24 @@ namespace SimpleLibraryAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // --- ADD THIS LINE HERE ---
+            // This tells the API how to create your Service
+            builder.Services.AddSingleton<SimpleLibraryAPI.Services.ProductService>();
+            builder.Services.AddSingleton<SimpleLibraryAPI.Services.BookService>();
+            // --------------------------
+
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                options.IncludeXmlComments(xmlPath);
+            });
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -24,11 +31,30 @@ namespace SimpleLibraryAPI
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
+            if (app.Environment.IsDevelopment())
+            {
+                // In development, it's okay to see the full error for debugging
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                // In PRODUCTION, we use the Safety Net
+                app.UseExceptionHandler(errorApp =>
+                {
+                    errorApp.Run(async context =>
+                    {
+                        context.Response.StatusCode = 500; // Professional "Internal Server Error"
+                        context.Response.ContentType = "application/json";
 
-
+                        // We send back a clean, polite message
+                        var errorResponse = new { message = "An unexpected error occurred. Our engineers are on it!" };
+                        await context.Response.WriteAsJsonAsync(errorResponse);
+                    });
+                });
+            }
             app.MapControllers();
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.Run();
         }
