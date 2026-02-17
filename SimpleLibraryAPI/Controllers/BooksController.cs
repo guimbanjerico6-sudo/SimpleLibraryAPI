@@ -60,8 +60,18 @@ namespace SimpleLibraryAPI.Controllers
         /// Add a new book to the library
         /// </summary>
         [HttpPost]
-        public IActionResult Post(Book newBook)
+        public IActionResult Post(AddBookRequest request)
         {
+            // We manually map the "Request" to a real "Book"
+            var newBook = new Book
+            {
+                BookTitle = request.BookTitle,
+                Author = request.Author,
+                Stock = request.Stock,
+                MaxStock = request.Stock, // We set this automatically!
+                CurrentBorrowerIds = new List<int>() // We start this empty!
+            };
+
             var success = _bookService.AddBook(newBook);
 
             return success switch
@@ -70,6 +80,25 @@ namespace SimpleLibraryAPI.Controllers
                 "NegativeStock" => BadRequest("Stock cannot be negative."),
                 _ => CreatedAtAction(nameof(Get), new { title = newBook.BookTitle }, newBook)
             };
+        }
+
+        /// <summary>
+        /// ADD USER 
+        /// <summary>
+        [HttpPost("user")]
+        public IActionResult Post(AddUserRequest request) // 1. Accept the Form
+        {
+            // 2. Call the Service to build the full User
+            // The Service will generate the ID and Card Number automatically
+            string newCard = _bookService.AddUser(request.FullName);
+
+            // 3. Return the result
+            return Ok(new
+            {
+                Message = "Welcome to the library!",
+                CardNumber = newCard,
+                Owner = request.FullName
+            });
         }
 
         /// <summary>

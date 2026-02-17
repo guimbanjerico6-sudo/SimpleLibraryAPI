@@ -1,45 +1,74 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using System.Text.Json;
+using System.IO;
 using SimpleLibraryAPI.Models;
 
 namespace SimpleLibraryAPI.Services
 {
     public class BookService
     {
-        private static List<Book> _books = new List<Book>();
-        private static List<ActivityLog> _history = new List<ActivityLog>();
-        private static List<User> _users = new List<User>(); // For future user management
+        // In-memory data storage (replaced with file-based persistence)
+        private List<Book> _books = new List<Book>();
+        private List<ActivityLog> _history = new List<ActivityLog>();
+        private List<User> _users = new List<User>();
 
-        //get all books
-        public List<Book> GetAllBooks() => _books;
-        //short cut for return _books;
-        public List<User> GetAllUsers() => _users;
+        // File paths for data persistence
+        private readonly string _booksFile = "books.json";
+        private readonly string _usersFile = "users.json";
+        private readonly string _historyFile = "history.json";
 
-
-        // get book by title
-        public Book GetByTitle(string title) => _books.FirstOrDefault(b => b.BookTitle.Equals(title, StringComparison.OrdinalIgnoreCase));
-
-        public List<Book> GetByAuthor(string author)
+        public BookService()
         {
-            // .Where() finds EVERY match, not just the first one
-            return _books.Where(b => b.Author.Equals(author, StringComparison.OrdinalIgnoreCase)).ToList();
+            _books = LoadDataFromFile<Book>(_booksFile);
+            _users = LoadDataFromFile<User>(_usersFile);
+            _history = LoadDataFromFile<ActivityLog>(_historyFile);
         }
-        // add new book
+
+        // --- PERSISTENCE HELPERS ---
+        private void SaveAll()
+        {
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            File.WriteAllText(_booksFile, JsonSerializer.Serialize(_books, options));
+            File.WriteAllText(_usersFile, JsonSerializer.Serialize(_users, options));
+            File.WriteAllText(_historyFile, JsonSerializer.Serialize(_history, options));
+        }
+
+        private List<T> LoadDataFromFile<T>(string fileName)
+        {
+            if (!File.Exists(fileName)) return new List<T>();
+            try
+            {
+                string json = File.ReadAllText(fileName);
+                return JsonSerializer.Deserialize<List<T>>(json) ?? new List<T>();
+            }
+            catch { return new List<T>(); }
+        }
+
+        // --- CORE METHODS ---
+        public List<Book> GetAllBooks() => _books;
+        public List<User> GetAllUsers() => _users;
+        public List<ActivityLog> GetHistory() => _history;
+
+        // Get book by title
+        public Book GetByTitle(string title) =>
+            _books.FirstOrDefault(b => b.BookTitle.Equals(title, StringComparison.OrdinalIgnoreCase));
+
+        public List<Book> GetByAuthor(string author) =>
+            _books.Where(b => b.Author.Equals(author, StringComparison.OrdinalIgnoreCase)).ToList();
+
         public string AddBook(Book newBook)
         {
             if (_books.Any(b => b.BookTitle.Equals(newBook.BookTitle, StringComparison.OrdinalIgnoreCase)))
                 return "Duplicate";
 
-            if (newBook.Stock <= 0) return "NegativeStock";
+            // If MaxStock isn't provided in JSON, default it to current Stock
+            if (newBook.MaxStock == 0) newBook.MaxStock = newBook.Stock;
 
-            newBook.MaxStock = newBook.Stock;
             _books.Add(newBook);
-
-            // Logic: Log the addition
-            LogActivity("Add", newBook.BookTitle, $"Initial inventory of {newBook.Stock} copies added.");
+            LogActivity("Add", newBook.BookTitle, "New book added to library.");
+            SaveAll();
             return "Success";
         }
 
-        // update stock
         public Book? AdminExpansion(string title, int amountToAdd)
         {
             var book = GetByTitle(title);
@@ -48,21 +77,21 @@ namespace SimpleLibraryAPI.Services
             book.Stock += amountToAdd;
             book.MaxStock += amountToAdd;
 
-            // Logic: Log the expansion
             LogActivity("Admin Expansion", title, $"Inventory expanded by {amountToAdd} copies.");
+            SaveAll();
             return book;
         }
 
-        // delete book
         public bool DeleteBook(string title)
         {
             var book = GetByTitle(title);
             if (book == null) return false;
 
             _books.Remove(book);
+            LogActivity("Delete", title, "Book removed from inventory.");
+            SaveAll();
             return true;
         }
-
 
         public string BorrowBook(string title, string userName, string cardNum)
         {
@@ -70,60 +99,33 @@ namespace SimpleLibraryAPI.Services
             if (book == null) return "NotFound";
             if (book.Stock <= 0) return "OutOfStock";
 
-            // Identify or Onboard by unique Card Number
             var user = GetOrOnboardUser(userName, cardNum);
 
             book.Stock--;
             book.CurrentBorrowerIds.Add(user.UserId);
 
-            // Using your LogActivity helper for cleaner code
-            LogActivity("Borrow", title, $"Borrowed by {user.FullName} (ID: {user.UserId})", user.UserId);
-
+            LogActivity("Borrow", title, $"Borrowed by {user.FullName}", user.UserId);
+            SaveAll();
             return "Success";
         }
-
 
         public string ReturnBook(string title, int userId)
         {
             var book = GetByTitle(title);
             if (book == null) return "NotFound";
-
-            if (!book.CurrentBorrowerIds.Contains(userId))
-            {
-                return "NotTheBorrower";
-            }
-
-            // Identify the user for the history details
-            var user = _users.FirstOrDefault(u => u.UserId == userId);
-            string userName = user?.FullName ?? "Unknown User";
+            if (!book.CurrentBorrowerIds.Contains(userId)) return "NotTheBorrower";
 
             book.Stock++;
             book.CurrentBorrowerIds.Remove(userId);
 
-            // Logic: Log the return with the user's name
-            LogActivity("Return", title, $"Returned by {userName} (ID: {userId})", userId);
+            LogActivity("Return", title, $"Returned by User ID: {userId}", userId);
+            SaveAll();
             return "Success";
         }
 
-
-
-        private void LogActivity(string action, string title, string details, int? userId = null)
-        {
-            _history.Add(new ActivityLog
-            {
-                Action = action,
-                BookTitle = title,
-                Timestamp = DateTime.Now,
-                BorrowerId = userId ?? 0, // Use the ID if provided, otherwise 0
-                Details = details
-            });
-        }
-        public List<ActivityLog> GetHistory() => _history;
         private User GetOrOnboardUser(string userName, string cardNum)
         {
-            // Check by Card Number instead of Name, because Card Numbers are UNIQUE
             var user = _users.FirstOrDefault(u => u.LibraryCard == cardNum);
-
             if (user == null)
             {
                 user = new User
@@ -137,6 +139,49 @@ namespace SimpleLibraryAPI.Services
             return user;
         }
 
-    }
+        private void LogActivity(string action, string title, string details, int? userId = null)
+        {
+            _history.Add(new ActivityLog
+            {
+                Action = action,
+                BookTitle = title,
+                Timestamp = DateTime.Now,
+                BorrowerId = userId ?? 0,
+                Details = details
+            });
+        }
+        public string AddUser(string name)
+        {
+            string newCardNum;
 
+            if (!_users.Any())
+            {
+                newCardNum = "LIB-0001";
+            }
+            else
+            {
+                int currentMax = _users.Max(u => int.Parse(u.LibraryCard.Substring(4)));
+
+                // 4. Add 1 and format it back to "LIB-0006"
+                newCardNum = $"LIB-{(currentMax + 1).ToString("D4")}";
+            }
+
+            // 2. GENERATE ID (Sequential) - This stays the same
+            int newId = _users.Any() ? _users.Max(u => u.UserId) + 1 : 1;
+
+            // 3. CREATE AND SAVE
+            var newUser = new User
+            {
+                UserId = newId,
+                FullName = name,
+                LibraryCard = newCardNum
+            };
+
+            _users.Add(newUser);
+            SaveAll(); // Auto-save to users.json
+
+            return newCardNum;
+        }
+
+    }
 }
