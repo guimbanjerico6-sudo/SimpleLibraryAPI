@@ -2,12 +2,13 @@
   {
     "BookTitle": "naruto",
     "Author": "kishimoto",
-    "Stock": 97,
+    "Stock": 96,
     "MaxStock": 100,
     "CurrentBorrowerIds": [
       1,
       1,
-      2
+      2,
+      3
     ]
   }
 ]

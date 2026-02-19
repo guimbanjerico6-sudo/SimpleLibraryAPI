@@ -8,5 +8,10 @@
     "UserId": 2,
     "FullName": "Jerico D. Guimban",
     "LibraryCard": "LIB-0002"
+  },
+  {
+    "UserId": 3,
+    "FullName": "kevin",
+    "LibraryCard": "LIB-0003"
   }
 ]

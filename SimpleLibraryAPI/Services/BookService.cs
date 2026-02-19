@@ -1,175 +1,154 @@
-﻿using System.Text.Json;
-using System.IO;
-using SimpleLibraryAPI.Models;
+﻿using SimpleLibraryAPI.Models;
+using SimpleLibraryAPI.DAL;
 
 namespace SimpleLibraryAPI.Services
 {
     public class BookService
     {
-        // In-memory data storage (replaced with file-based persistence)
-        private List<Book> _books = new List<Book>();
-        private List<ActivityLog> _history = new List<ActivityLog>();
-        private List<User> _users = new List<User>();
+        private readonly BookRepository _repository;
 
-        // File paths for data persistence
-        private readonly string _booksFile = "books.json";
-        private readonly string _usersFile = "users.json";
-        private readonly string _historyFile = "history.json";
-
-        public BookService()
+        public BookService(BookRepository repository)
         {
-            _books = LoadDataFromFile<Book>(_booksFile);
-            _users = LoadDataFromFile<User>(_usersFile);
-            _history = LoadDataFromFile<ActivityLog>(_historyFile);
+            _repository = repository;
         }
 
-        // --- PERSISTENCE HELPERS ---
-        private void SaveAll()
-        {
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText(_booksFile, JsonSerializer.Serialize(_books, options));
-            File.WriteAllText(_usersFile, JsonSerializer.Serialize(_users, options));
-            File.WriteAllText(_historyFile, JsonSerializer.Serialize(_history, options));
-        }
-
-        private List<T> LoadDataFromFile<T>(string fileName)
-        {
-            if (!File.Exists(fileName)) return new List<T>();
-            try
-            {
-                string json = File.ReadAllText(fileName);
-                return JsonSerializer.Deserialize<List<T>>(json) ?? new List<T>();
-            }
-            catch { return new List<T>(); }
-        }
-
-        // --- CORE METHODS ---
-        public List<Book> GetAllBooks() => _books;
-        public List<User> GetAllUsers() => _users;
-        public List<ActivityLog> GetHistory() => _history;
-
-        // Get book by title
-        public Book GetByTitle(string title) =>
-            _books.FirstOrDefault(b => b.BookTitle.Equals(title, StringComparison.OrdinalIgnoreCase));
+        // --- READ OPERATIONS ---
+        public List<Book> GetBooks() => _repository.GetAllBooks();
+        public List<User> GetAllUsers() => _repository.GetAllUsers();
+        public List<ActivityLog> GetHistory() => _repository.GetHistory();
+        public Book? GetByTitle(string title) => _repository.GetBookByTitle(title);
 
         public List<Book> GetByAuthor(string author) =>
-            _books.Where(b => b.Author.Equals(author, StringComparison.OrdinalIgnoreCase)).ToList();
+            _repository.GetAllBooks()
+                .Where(b => b.Author.Equals(author, StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
-        public string AddBook(Book newBook)
+        // --- WRITE OPERATIONS (The Logic) ---
+
+        public void AddBook(Book newBook)
         {
-            if (_books.Any(b => b.BookTitle.Equals(newBook.BookTitle, StringComparison.OrdinalIgnoreCase)))
-                return "Duplicate";
+            if (newBook.Stock < 0)
+            {
+                throw new ArgumentException("Stock cannot be negative.");
+            }
 
-            // If MaxStock isn't provided in JSON, default it to current Stock
-            if (newBook.MaxStock == 0) newBook.MaxStock = newBook.Stock;
-
-            _books.Add(newBook);
+            var existing = _repository.GetBookByTitle(newBook.BookTitle);
+            if (existing != null)
+            {
+                throw new ArgumentException("Book title already exists.");
+            }
+            _repository.AddBook(newBook);
             LogActivity("Add", newBook.BookTitle, "New book added to library.");
-            SaveAll();
-            return "Success";
         }
 
         public Book? AdminExpansion(string title, int amountToAdd)
         {
-            var book = GetByTitle(title);
+            if (amountToAdd <= 0)
+            {
+                throw new ArgumentException("Amount to add must be greater than zero.");
+            }
+
+            var book = _repository.GetBookByTitle(title);
             if (book == null) return null;
 
+            // 3. UPDATE & SAVE
             book.Stock += amountToAdd;
             book.MaxStock += amountToAdd;
 
+            _repository.SaveChanges(); // Persist changes
+
             LogActivity("Admin Expansion", title, $"Inventory expanded by {amountToAdd} copies.");
-            SaveAll();
             return book;
         }
 
         public bool DeleteBook(string title)
         {
-            var book = GetByTitle(title);
+            var book = _repository.GetBookByTitle(title);
             if (book == null) return false;
 
-            _books.Remove(book);
+            _repository.RemoveBook(book);
             LogActivity("Delete", title, "Book removed from inventory.");
-            SaveAll();
             return true;
         }
 
-        public string BorrowBook(string title, string userName, string cardNum)
+        public void BorrowBook(string title, string userName, string cardNum)
         {
-            var book = GetByTitle(title);
-            if (book == null) return "NotFound";
-            if (book.Stock <= 0) return "OutOfStock";
+            var book = _repository.GetBookByTitle(title);
+
+            if (book == null) throw new ArgumentException($"Book '{title}' not found.");
+
+            if (book.Stock <= 0)
+            {
+                throw new ArgumentException("This book is currently out of stock.");
+            }
 
             var user = GetOrOnboardUser(userName, cardNum);
 
             book.Stock--;
             book.CurrentBorrowerIds.Add(user.UserId);
 
+            _repository.SaveChanges(); 
             LogActivity("Borrow", title, $"Borrowed by {user.FullName}", user.UserId);
-            SaveAll();
-            return "Success";
         }
 
-        public string ReturnBook(string title, int userId)
+        public void ReturnBook(string title, int userId)
         {
-            var book = GetByTitle(title);
-            if (book == null) return "NotFound";
-            if (!book.CurrentBorrowerIds.Contains(userId)) return "NotTheBorrower";
+            var book = _repository.GetBookByTitle(title);
+            if (book == null) throw new ArgumentException($"Book '{title}' not found.");
+
+            if (!book.CurrentBorrowerIds.Contains(userId))
+            {
+                throw new ArgumentException("This user does not have this book.");
+            }
 
             book.Stock++;
             book.CurrentBorrowerIds.Remove(userId);
 
+            _repository.SaveChanges();
             LogActivity("Return", title, $"Returned by User ID: {userId}", userId);
-            SaveAll();
-            return "Success";
         }
+
+        // --- HELPER LOGIC ---
 
         private User GetOrOnboardUser(string userName, string cardNum)
         {
-            var user = _users.FirstOrDefault(u => u.LibraryCard == cardNum);
+            var user = _repository.GetUserByCard(cardNum);
             if (user == null)
             {
+                var allUsers = _repository.GetAllUsers();
                 user = new User
                 {
-                    UserId = _users.Count + 1,
+                    UserId = allUsers.Count + 1,
                     FullName = userName,
                     LibraryCard = cardNum
                 };
-                _users.Add(user);
+                _repository.AddUser(user);
             }
             return user;
         }
 
-        private void LogActivity(string action, string title, string details, int? userId = null)
-        {
-            _history.Add(new ActivityLog
-            {
-                Action = action,
-                BookTitle = title,
-                Timestamp = DateTime.Now,
-                BorrowerId = userId ?? 0,
-                Details = details
-            });
-        }
         public string AddUser(string name)
         {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("User name cannot be empty.");
+            }
+
+            var users = _repository.GetAllUsers();
             string newCardNum;
 
-            if (!_users.Any())
+            if (!users.Any())
             {
                 newCardNum = "LIB-0001";
             }
             else
             {
-                int currentMax = _users.Max(u => int.Parse(u.LibraryCard.Substring(4)));
-
-                // 4. Add 1 and format it back to "LIB-0006"
+                int currentMax = users.Max(u => int.Parse(u.LibraryCard.Substring(4)));
                 newCardNum = $"LIB-{(currentMax + 1).ToString("D4")}";
             }
 
-            // 2. GENERATE ID (Sequential) - This stays the same
-            int newId = _users.Any() ? _users.Max(u => u.UserId) + 1 : 1;
+            int newId = users.Any() ? users.Max(u => u.UserId) + 1 : 1;
 
-            // 3. CREATE AND SAVE
             var newUser = new User
             {
                 UserId = newId,
@@ -177,11 +156,21 @@ namespace SimpleLibraryAPI.Services
                 LibraryCard = newCardNum
             };
 
-            _users.Add(newUser);
-            SaveAll(); // Auto-save to users.json
-
+            _repository.AddUser(newUser);
             return newCardNum;
         }
 
+        private void LogActivity(string action, string title, string details, int? userId = null)
+        {
+            var log = new ActivityLog
+            {
+                Action = action,
+                BookTitle = title,
+                Timestamp = DateTime.Now,
+                BorrowerId = userId ?? 0,
+                Details = details
+            };
+            _repository.AddLog(log);
+        }
     }
 }

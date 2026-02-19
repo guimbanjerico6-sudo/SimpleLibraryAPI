@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-18T18:15:08.3353816+08:00",
+    "BorrowerId": 3,
+    "Details": "Borrowed by kevin"
+  }
+]

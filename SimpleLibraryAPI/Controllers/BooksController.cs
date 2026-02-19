@@ -10,195 +10,158 @@ namespace SimpleLibraryAPI.Controllers
     {
         private readonly BookService _bookService;
 
-        
         public BooksController(BookService bookService)
         {
             _bookService = bookService;
-
         }
 
-        /// <summary>
-        /// View all Book information
-        /// </summary>
         [HttpGet]
-        public List<Book> Get() => _bookService.GetAllBooks();
+        public List<Book> Get() => _bookService.GetBooks();
 
-        ///<summary>
-        /// Find User
-        /// <summary>
         [HttpGet("users")]
         public List<User> GetUsers() => _bookService.GetAllUsers();
 
-
-        /// <summary>
-        /// Find Book With Title 
-        /// </summary>
         [HttpGet("{title}")]
         public IActionResult Get(string title)
         {
             var book = _bookService.GetByTitle(title);
-
-            if (book == null)
-            {
-                return NotFound($"Book with Title {title} was not found.");
-            }
+            if (book == null) return NotFound($"Book '{title}' not found.");
             return Ok(book);
         }
 
-        /// <summary>
-        /// Find a specific book by its author
-        /// </summary>
         [HttpGet("author")]
         public List<Book> GetByAuthor([FromQuery] string name)
         {
-            // We just return the list directly. 
-            // If it's empty, Swagger will show [] and a 200 OK status.
             return _bookService.GetByAuthor(name);
         }
 
-        /// <summary>
-        /// Add a new book to the library
-        /// </summary>
-        [HttpPost]
-        public IActionResult Post(AddBookRequest request)
+        [HttpGet("history")]
+        public IActionResult GetHistory()
         {
-            // We manually map the "Request" to a real "Book"
+            return Ok(_bookService.GetHistory());
+        }
+
+        [HttpPost]
+        public IActionResult AddBook([FromBody] AddBookRequest request)
+        {
+
             var newBook = new Book
             {
                 BookTitle = request.BookTitle,
                 Author = request.Author,
                 Stock = request.Stock,
-                MaxStock = request.Stock, // We set this automatically!
-                CurrentBorrowerIds = new List<int>() // We start this empty!
+                MaxStock = request.Stock, // Default logic
+                CurrentBorrowerIds = new List<int>()
             };
 
-            var success = _bookService.AddBook(newBook);
-
-            return success switch
+            try
             {
-                "Duplicate" => Conflict("A book with the same title already exists."),
-                "NegativeStock" => BadRequest("Stock cannot be negative."),
-                _ => CreatedAtAction(nameof(Get), new { title = newBook.BookTitle }, newBook)
-            };
-        }
+                
+                _bookService.AddBook(newBook);
 
-        /// <summary>
-        /// ADD USER 
-        /// <summary>
-        [HttpPost("user")]
-        public IActionResult Post(AddUserRequest request) // 1. Accept the Form
-        {
-            // 2. Call the Service to build the full User
-            // The Service will generate the ID and Card Number automatically
-            string newCard = _bookService.AddUser(request.FullName);
-
-            // 3. Return the result
-            return Ok(new
-            {
-                Message = "Welcome to the library!",
-                CardNumber = newCard,
-                Owner = request.FullName
-            });
-        }
-
-        /// <summary>
-        /// Increase inventory capacity (Admin Only)
-        /// </summary>
-        [HttpPut("admin/inventory/{title}")]
-        public IActionResult AdminUpdate(
-        string title,
-        [FromQuery] int amountToAdd,
-        [FromHeader(Name = "X-Admin-Password")] string password) // Secret Header
-        {
-            // The Guard
-            if (password != "Admin123")
-            {
-                return Unauthorized("Access Denied: Invalid Admin Password.");
+                
+                return CreatedAtAction(nameof(Get), new { title = newBook.BookTitle }, newBook);
             }
-
-            // The rest is Scenario 2 logic (Stock + MaxStock)
-            var success = _bookService.AdminExpansion(title, amountToAdd);
-
-            if (success == null) return NotFound("Book not found.");
-
-            return Ok(new
+            catch (ArgumentException ex)
             {
-                Message = "Inventory expanded successfully!",
-                NewStock = success.Stock,
-                NewMaxCapacity = success.MaxStock,
-                Book = success.BookTitle
-            });
+                return BadRequest(ex.Message);
+            }
+        }   
+
+        [HttpPost("user")]
+        public IActionResult AddUser([FromBody] AddUserRequest request)
+        {
+            try
+            {
+                string newCard = _bookService.AddUser(request.FullName);
+                return Ok(new
+                {
+                    Message = "Welcome to the library!",
+                    CardNumber = newCard,
+                    Owner = request.FullName
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        /// <summary>
-        /// Delete Book
-        /// </summary>
+        [HttpPut("admin/inventory/{title}")]
+        public IActionResult AdminUpdate(string title, [FromQuery] int amountToAdd, [FromHeader(Name = "X-Admin-Password")] string password)
+        {
+            try
+            {
+                if (password != "Admin123") return Unauthorized("Access Denied.");
+
+                var success = _bookService.AdminExpansion(title, amountToAdd);
+
+                if (success == null) return NotFound("Book not found.");
+
+                return Ok(new
+                {
+                    Message = "Inventory expanded successfully!",
+                    NewStock = success.Stock,
+                    NewMaxCapacity = success.MaxStock,
+                    Book = success.BookTitle
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpDelete("{title}")]
         public IActionResult Delete(string title)
         {
             var success = _bookService.DeleteBook(title);
-            if (!success)
-            {
-                return NotFound($"Book with Title {title} was not found.");
-            }
+            if (!success) return NotFound($"Book '{title}' not found.");
             return Ok("Book deleted successfully.");
-
         }
 
-        /// <summary>
-        /// Borrow Book (Strict: Must provide both User Name and Card Number)
-        /// </summary>
         [HttpPut("borrow/{title}")]
         public IActionResult Borrow(string title, [FromQuery] string userName, [FromQuery] string cardNum)
         {
-            // Fix: Check both name and card number strings
+            // 1. Basic Validation
             if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(cardNum))
-                return BadRequest("User name and Card Number are required to borrow a book.");
+                return BadRequest("User name and Card Number are required.");
 
-            // Pass the cardNum to the service
-            var result = _bookService.BorrowBook(title, userName, cardNum);
-
-            return result switch
+            try
             {
-                "NotFound" => NotFound($"Book '{title}' not found."),
-                "OutOfStock" => BadRequest("This book is currently out of stock."),
-                "Success" => Ok(new
+                _bookService.BorrowBook(title, userName, cardNum);
+
+                return Ok(new
                 {
-                    Message = $"Book borrowed successfully by {userName} (Card: {cardNum})!",
+                    Message = $"Book borrowed successfully by {userName}!",
                     Details = _bookService.GetByTitle(title)
-                }),
-                _ => StatusCode(500, "Unexpected error.")
-            };
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                if (ex.Message.Contains("not found")) return NotFound(ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
-        /// <summary>
-        /// Return Book (Strict: Must provide the specific User ID)
-        /// </summary>
         [HttpPut("Return/{title}")]
         public IActionResult Return(string title, [FromQuery] int userId)
         {
-            // Now correctly passing the userId to your Strict service logic
-            var result = _bookService.ReturnBook(title, userId);
-
-            return result switch
+            try
             {
-                "NotFound" => NotFound($"Book with Title '{title}' was not found."),
-                "NotTheBorrower" => BadRequest("Security Alert: This User ID is not recorded as a borrower of this book."),
-                "Success" => Ok(new
+                _bookService.ReturnBook(title, userId);
+
+                return Ok(new
                 {
                     Message = "Book returned successfully!",
                     Details = _bookService.GetByTitle(title)
-                }),
-                _ => StatusCode(500, "An unexpected error occurred.")
-            };
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                if (ex.Message.Contains("not found")) return NotFound(ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
-        /// <summary>
-        /// View the full history of library activities
-        /// </summary>
-        [HttpGet("history")]
-        public IActionResult GetHistory()
-        {
-            return Ok(_bookService.GetHistory());
-        }    
     }
 }

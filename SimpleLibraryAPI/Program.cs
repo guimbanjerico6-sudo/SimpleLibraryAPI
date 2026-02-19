@@ -10,6 +10,7 @@ namespace SimpleLibraryAPI
             // This tells the API how to create your Service
             builder.Services.AddSingleton<SimpleLibraryAPI.Services.ProductService>();
             builder.Services.AddSingleton<SimpleLibraryAPI.Services.BookService>();
+            builder.Services.AddSingleton<SimpleLibraryAPI.DAL.BookRepository>();
             // --------------------------
 
 
