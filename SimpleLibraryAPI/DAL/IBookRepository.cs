@@ -2,7 +2,7 @@
 
 namespace SimpleLibraryAPI.DAL
 {
-    public interface IBookRepository
+    public interface IBookRepository 
     {
         // --- READ OPERATIONS ---
         List<Book> GetAllBooks(); 

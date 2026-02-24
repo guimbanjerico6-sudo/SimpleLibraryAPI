@@ -4,7 +4,7 @@ using SimpleLibraryAPI.Services;
 
 namespace SimpleLibraryAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]")] 
     [ApiController]
     public class BooksController : ControllerBase
     {

@@ -2,20 +2,15 @@
   {
     "BookTitle": "naruto",
     "Author": "kishimoto",
-    "Stock": 96,
-    "MaxStock": 100,
+    "Stock": 104,
+    "MaxStock": 110,
     "CurrentBorrowerIds": [
       1,
       1,
       2,
-      3
+      3,
+      6,
+      4
     ]
-  },
-  {
-    "BookTitle": "makibao",
-    "Author": "kuyamo",
-    "Stock": 5,
-    "MaxStock": 5,
-    "CurrentBorrowerIds": []
   }
 ]

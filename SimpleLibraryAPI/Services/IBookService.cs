@@ -5,7 +5,7 @@ namespace SimpleLibraryAPI.Services
     public interface IBookService
     {
         // --- READ OPERATIONS ---
-        List<Book> GetBooks();
+        List<Book> GetBooks(); 
         List<User> GetAllUsers();
         List<ActivityLog> GetHistory();
         Book? GetByTitle(string title);

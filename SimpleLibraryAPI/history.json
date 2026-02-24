@@ -12,5 +12,33 @@
     "Timestamp": "2026-02-24T13:49:10.8163339+08:00",
     "BorrowerId": 0,
     "Details": "New book added to library."
+  },
+  {
+    "Action": "Delete",
+    "BookTitle": "makibao",
+    "Timestamp": "2026-02-24T17:36:57.1363846+08:00",
+    "BorrowerId": 0,
+    "Details": "Book removed from inventory."
+  },
+  {
+    "Action": "Admin Expansion",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-24T17:38:33.283511+08:00",
+    "BorrowerId": 0,
+    "Details": "Inventory expanded by 10 copies."
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-24T17:39:05.9429107+08:00",
+    "BorrowerId": 6,
+    "Details": "Borrowed by ff"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-24T18:36:51.9939005+08:00",
+    "BorrowerId": 4,
+    "Details": "Borrowed by eco"
   }
 ]

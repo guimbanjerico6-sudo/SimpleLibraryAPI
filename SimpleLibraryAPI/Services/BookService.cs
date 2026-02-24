@@ -81,14 +81,21 @@ namespace SimpleLibraryAPI.Services
             {
                 throw new ArgumentException("This book is currently out of stock.");
             }
+            
+            var borrower = _repository.GetAllUsers()
+                .FirstOrDefault(u => u.FullName.Equals(userName, StringComparison.OrdinalIgnoreCase) 
+                                  && u.LibraryCard.Equals(cardNum, StringComparison.OrdinalIgnoreCase));
+            if (borrower == null)
+            {
+                throw new ArgumentException("User not found with the provided name and library card number.");
+            }
 
-            var user = GetOrOnboardUser(userName, cardNum);
 
             book.Stock--;
-            book.CurrentBorrowerIds.Add(user.UserId);
+            book.CurrentBorrowerIds.Add(borrower.UserId);
 
             _repository.SaveChanges(); 
-            LogActivity("Borrow", title, $"Borrowed by {user.FullName}", user.UserId);
+            LogActivity("Borrow", title, $"Borrowed by {borrower.FullName}", borrower.UserId);
         }
 
         public void ReturnBook(string title, int userId)
@@ -108,24 +115,6 @@ namespace SimpleLibraryAPI.Services
             LogActivity("Return", title, $"Returned by User ID: {userId}", userId);
         }
 
-        // --- HELPER LOGIC ---
-
-        private User GetOrOnboardUser(string userName, string cardNum)
-        {
-            var user = _repository.GetUserByCard(cardNum);
-            if (user == null)
-            {
-                var allUsers = _repository.GetAllUsers();
-                user = new User
-                {
-                    UserId = allUsers.Count + 1,
-                    FullName = userName,
-                    LibraryCard = cardNum
-                };
-                _repository.AddUser(user);
-            }
-            return user;
-        }
 
         public string AddUser(string name)
         {
