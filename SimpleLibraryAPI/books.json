@@ -10,5 +10,12 @@
       2,
       3
     ]
+  },
+  {
+    "BookTitle": "makibao",
+    "Author": "kuyamo",
+    "Stock": 5,
+    "MaxStock": 5,
+    "CurrentBorrowerIds": []
   }
 ]

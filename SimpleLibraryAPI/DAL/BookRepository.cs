@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace SimpleLibraryAPI.DAL
 {
-    public class BookRepository
+    public class BookRepository : IBookRepository
     {
         private List<Book> _books = new List<Book>();
         private List<User> _users = new List<User>();
@@ -16,7 +16,7 @@ namespace SimpleLibraryAPI.DAL
         public BookRepository()
         {
             _books = LoadDataFromFile<Book>(_booksFile);
-            _users = LoadDataFromFile<User>(_usersFile);
+            _users = LoadDataFromFile<User>(_usersFile);                                                                                                                                                                                                
             _history = LoadDataFromFile<ActivityLog>(_historyFile);
         }
 

@@ -3,11 +3,11 @@ using SimpleLibraryAPI.DAL;
 
 namespace SimpleLibraryAPI.Services
 {
-    public class BookService
+    public class BookService : IBookService
     {
-        private readonly BookRepository _repository;
+        private readonly IBookRepository _repository;
 
-        public BookService(BookRepository repository)
+        public BookService(IBookRepository repository)
         {
             _repository = repository;
         }

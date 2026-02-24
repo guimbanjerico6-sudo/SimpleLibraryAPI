@@ -5,5 +5,12 @@
     "Timestamp": "2026-02-18T18:15:08.3353816+08:00",
     "BorrowerId": 3,
     "Details": "Borrowed by kevin"
+  },
+  {
+    "Action": "Add",
+    "BookTitle": "makibao",
+    "Timestamp": "2026-02-24T13:49:10.8163339+08:00",
+    "BorrowerId": 0,
+    "Details": "New book added to library."
   }
 ]

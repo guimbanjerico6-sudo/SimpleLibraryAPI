@@ -6,13 +6,18 @@ namespace SimpleLibraryAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // --- ADD THIS LINE HERE ---
-            // This tells the API how to create your Service
-            builder.Services.AddSingleton<SimpleLibraryAPI.Services.ProductService>();
-            builder.Services.AddSingleton<SimpleLibraryAPI.Services.BookService>();
-            builder.Services.AddSingleton<SimpleLibraryAPI.DAL.BookRepository>();
-            // --------------------------
+            // --- DEPENDENCY INJECTION (The Matchmakers) ---
 
+            // (Optional: Leave this if you are still using the ProductService from earlier!)
+            builder.Services.AddSingleton<SimpleLibraryAPI.Services.ProductService>();
+
+            // 1. The DAL Matchmaker (Contract -> Implementation)
+            builder.Services.AddSingleton<SimpleLibraryAPI.DAL.IBookRepository, SimpleLibraryAPI.DAL.BookRepository>();
+
+            // 2. The Service Matchmaker (Contract -> Implementation)
+            builder.Services.AddSingleton<SimpleLibraryAPI.Services.IBookService, SimpleLibraryAPI.Services.BookService>();
+
+            // ----------------------------------------------
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -25,16 +30,12 @@ namespace SimpleLibraryAPI
 
             var app = builder.Build();
 
+            // --- MIDDLEWARE PIPELINE ---
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseAuthorization();
-            if (app.Environment.IsDevelopment())
-            {
                 // In development, it's okay to see the full error for debugging
                 app.UseDeveloperExceptionPage();
             }
@@ -54,6 +55,10 @@ namespace SimpleLibraryAPI
                     });
                 });
             }
+
+            app.UseHttpsRedirection();
+            app.UseAuthorization();
+
             app.MapControllers();
             app.UseMiddleware<ExceptionMiddleware>();
 
