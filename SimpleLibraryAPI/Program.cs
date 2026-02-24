@@ -1,3 +1,6 @@
+using SimpleLibraryAPI.DAL;
+using SimpleLibraryAPI.Services;
+
 namespace SimpleLibraryAPI
 {
     public class Program
@@ -22,6 +25,21 @@ namespace SimpleLibraryAPI
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 options.IncludeXmlComments(xmlPath);
             });
+
+            //Mikee - inaadd ko to para mag connect
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    // Palitan ang port dito para tumugma sa UI mo (7244)
+                    policy.WithOrigins("https://localhost:7244", "http://localhost:7244")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
+            builder.Services.AddSingleton<BookRepository>();
+            builder.Services.AddScoped<BookService>();
 
             var app = builder.Build();
 
@@ -54,6 +72,10 @@ namespace SimpleLibraryAPI
                     });
                 });
             }
+
+            //ako din nag add ng allowFrontend
+            app.UseCors("AllowFrontend");
+
             app.MapControllers();
             app.UseMiddleware<ExceptionMiddleware>();
 

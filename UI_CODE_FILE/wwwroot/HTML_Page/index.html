@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Inventory | Production UI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .navbar {
+            margin-bottom: 30px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+
+            .card:hover {
+                box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+            }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.5em 0.8em;
+        }
+        /* Image Placeholder styling as requested */
+        .img-placeholder {
+            width: 40px;
+            height: 55px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            margin-right: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html"><i class="fas fa-book-reader me-2"></i>LibraryApp</a>
+            <div class="d-flex">
+                <a class="btn btn-outline-light btn-sm me-2" href="users.html">Members</a>
+                <a class="btn btn-outline-light btn-sm" href="history.html">History</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-dark fw-bold">Books Inventory</h5>
+                <button class="btn btn-primary shadow-sm" onclick="openAddModal()">
+                    <i class="fas fa-plus me-2"></i>Add New Book
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Title & Author</th>
+                                <th>Availability</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="booksTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="loader" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted small">Connecting to Library Server...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="bookModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <form id="bookForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Register New Book</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Book Title</label>
+                            <input type="text" id="bTitle" class="form-control bg-light" placeholder="Enter title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Author</label>
+                            <input type="text" id="bAuthor" class="form-control bg-light" placeholder="Author name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Initial Stock</label>
+                            <input type="number" id="bStock" class="form-control bg-light" required min="1" value="10">
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary border-0" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4 border-0">Save Entry</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // MATCHED TO BACKEND PORT 7046 FROM YOUR PROJECT SOURCE
+        const API_URL = 'https://localhost:7046/api/Books';
+
+        $(document).ready(function () {
+            loadBooks();
+
+            $('#bookForm').on('submit', function (e) {
+                e.preventDefault();
+                saveBook();
+            });
+        });
+
+        function loadBooks() {
+            $('#loader').show();
+            $('#booksTableBody').empty();
+
+            $.ajax({
+                url: API_URL, // GET /api/Books [cite: 172]
+                type: 'GET',
+                success: function (data) {
+                    let rows = '';
+                    if (data.length === 0) {
+                        rows = `<tr><td colspan="3" class="text-center py-5 text-muted">No books in vault.</td></tr>`;
+                    } else {
+                        data.forEach(b => {
+                            const isOutOfStock = b.stock === 0;
+                            rows += `
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="img-placeholder"><i class="fas fa-image fa-xs"></i></div>
+                                                <div>
+                                                    <div class="fw-bold text-dark">${b.bookTitle}</div>
+                                                    <div class="text-muted small">${b.author}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge ${isOutOfStock ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'}">
+                                                ${b.stock} / ${b.maxStock} Copies
+                                            </span>
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <button class="btn btn-sm btn-outline-success border-0 me-1" onclick="borrowBook('${b.bookTitle}')" ${isOutOfStock ? 'disabled' : ''}>
+                                                <i class="fas fa-hand-holding-heart me-1"></i>Borrow
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning border-0 me-1" onclick="returnBook('${b.bookTitle}')">
+                                                <i class="fas fa-undo me-1"></i>Return
+                                            </button>
+                                            <button class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="deleteBook('${b.bookTitle}')">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>`;
+                        });
+                    }
+                    $('#booksTableBody').html(rows);
+                    $('#loader').hide();
+                },
+                error: function () {
+                    $('#booksTableBody').html('<tr><td colspan="3" class="text-center py-4 text-danger">Connection Error. Is Port 7046 running?</td></tr>');
+                    $('#loader').hide();
+                }
+            });
+        }
+
+        function openAddModal() {
+            $('#bookForm')[0].reset();
+            $('#bookModal').modal('show');
+        }
+
+        function saveBook() {
+            const bookData = {
+                bookTitle: $('#bTitle').val(),
+                author: $('#bAuthor').val(),
+                stock: parseInt($('#bStock').val())
+            };
+
+            $.ajax({
+                url: API_URL, // POST /api/Books [cite: 178]
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(bookData),
+                success: function () {
+                    $('#bookModal').modal('hide');
+                    loadBooks();
+                },
+                error: function (xhr) { alert('Backend Error: ' + xhr.responseText); }
+            });
+        }
+
+        function deleteBook(title) {
+            if (confirm(`Remove '${title}' from inventory permanently?`)) {
+                $.ajax({
+                    url: `${API_URL}/${encodeURIComponent(title)}`, // DELETE /api/Books/{title} [cite: 191]
+                    type: 'DELETE',
+                    success: function () { loadBooks(); },
+                    error: function (xhr) { alert('Error: ' + xhr.responseText); }
+                });
+            }
+        }
+
+        function borrowBook(title) {
+            const userName = prompt("Member Name:");
+            const cardNum = prompt("Library Card Number:");
+
+            if (userName && cardNum) {
+                // Gamit ang PUT /api/Books/borrow/{title} logic mula sa backend
+                $.ajax({
+                    url: `${API_URL}/borrow/${encodeURIComponent(title)}?userName=${encodeURIComponent(userName)}&cardNum=${encodeURIComponent(cardNum)}`,
+                    type: 'PUT',
+                    success: function (res) {
+                        alert(res.message);
+                        loadBooks();
+                    },
+                    error: function (xhr) { alert('Borrowing Failed: ' + xhr.responseText); }
+                });
+            }
+        }
+
+        function returnBook(title) {
+            const userId = prompt("Please provide Member ID (e.g., 1):");
+            if (userId) {
+                // Gamit ang PUT /api/Books/Return/{title} logic mula sa backend [cite: 197]
+                $.ajax({
+                    url: `${API_URL}/Return/${encodeURIComponent(title)}?userId=${userId}`,
+                    type: 'PUT',
+                    success: function (res) {
+                        alert(res.message);
+                        loadBooks();
+                    },
+                    error: function (xhr) { alert('Return Failed: ' + xhr.responseText); }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

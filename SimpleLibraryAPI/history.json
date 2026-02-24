@@ -5,5 +5,54 @@
     "Timestamp": "2026-02-18T18:15:08.3353816+08:00",
     "BorrowerId": 3,
     "Details": "Borrowed by kevin"
+  },
+  {
+    "Action": "Add",
+    "BookTitle": "Mang Kepweng",
+    "Timestamp": "2026-02-24T15:50:37.3999151+08:00",
+    "BorrowerId": 0,
+    "Details": "New book added to library."
+  },
+  {
+    "Action": "Delete",
+    "BookTitle": "Mang Kepweng",
+    "Timestamp": "2026-02-24T16:50:35.2613928+08:00",
+    "BorrowerId": 0,
+    "Details": "Book removed from inventory."
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-24T16:55:09.0357113+08:00",
+    "BorrowerId": 4,
+    "Details": "Borrowed by carl"
+  },
+  {
+    "Action": "Add",
+    "BookTitle": "Lord of the Rings",
+    "Timestamp": "2026-02-24T17:00:32.5512945+08:00",
+    "BorrowerId": 0,
+    "Details": "New book added to library."
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "Lord of the Rings",
+    "Timestamp": "2026-02-24T17:00:56.9751339+08:00",
+    "BorrowerId": 4,
+    "Details": "Borrowed by carl"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "Lord of the Rings",
+    "Timestamp": "2026-02-24T17:01:43.7386161+08:00",
+    "BorrowerId": 4,
+    "Details": "Returned by User ID: 4"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-24T17:14:36.2818667+08:00",
+    "BorrowerId": 5,
+    "Details": "Borrowed by Ace Kyuti"
   }
 ]

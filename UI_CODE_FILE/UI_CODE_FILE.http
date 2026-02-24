@@ -1,0 +1,6 @@
+@UI_CODE_FILE_HostAddress = http://localhost:5237
+
+GET {{UI_CODE_FILE_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

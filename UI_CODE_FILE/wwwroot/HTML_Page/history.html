@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity History | Production UI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .navbar {
+            margin-bottom: 30px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+
+            .card:hover {
+                box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+            }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.5em 0.8em;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html"><i class="fas fa-book-reader me-2"></i>LibraryApp</a>
+            <div class="d-flex">
+                <a class="btn btn-outline-light btn-sm me-2" href="users.html">Members</a>
+                <a class="btn btn-light btn-sm fw-bold" href="history.html">History</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 text-dark fw-bold">Activity Logs</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Action</th>
+                                <th>Book Title</th>
+                                <th>Details</th>
+                                <th>Date & Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="loader" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted small">Loading logs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script>const API_URL = 'https://localhost:7046/api/Books/history';
+
+        $(document).ready(function () {
+            loadHistory();
+        });
+
+        function getBadgeStyle(action) {
+            const act = action.toLowerCase();
+            if (act.includes('borrow')) return 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+            if (act.includes('return')) return 'bg-success-subtle text-success border border-success-subtle';
+            if (act.includes('add')) return 'bg-primary-subtle text-primary border border-primary-subtle';
+            if (act.includes('delete')) return 'bg-danger-subtle text-danger border border-danger-subtle';
+            return 'bg-secondary-subtle text-secondary border border-secondary-subtle';
+        }
+
+        function loadHistory() {
+            $('#loader').show();
+            $('#historyTableBody').empty();
+
+            $.ajax({
+                url: API_URL, // GET /api/Books/history
+                type: 'GET',
+                success: function (data) {
+                    let rows = '';
+                    if (data.length === 0) {
+                        rows = `<tr><td colspan="4" class="text-center py-5 text-muted">No activity logs found.</td></tr>`;
+                    } else {
+                        // Reverse para laging bago ang nasa taas
+                        data.reverse().forEach(log => {
+                            // Format date cleanly
+                            let dateObj = new Date(log.timestamp);
+                            let dateStr = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                            let timeStr = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+                            rows += `
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge ${getBadgeStyle(log.action)}">${log.action}</span>
+                                    </td>
+                                    <td class="fw-bold text-dark">${log.bookTitle}</td>
+                                    <td class="text-muted small">${log.details}</td>
+                                    <td class="text-muted small">
+                                        <i class="far fa-clock me-1"></i>${dateStr} &bull; ${timeStr}
+                                    </td>
+                                </tr>`;
+                        });
+                    }
+                    $('#historyTableBody').html(rows);
+                    $('#loader').hide();
+                },
+                error: function () {
+                    $('#historyTableBody').html('<tr><td colspan="4" class="text-center py-4 text-danger">Connection Error. Is Port 7046 running?</td></tr>');
+                    $('#loader').hide();
+                }
+            });
+        }</script>
+</body>
+</html>

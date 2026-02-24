@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36930.0 d17.14
+VisualStudioVersion = 17.14.36930.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleLibraryAPI", "SimpleLibraryAPI\SimpleLibraryAPI.csproj", "{C4F7F643-FFC4-4892-A537-EFEF0A1191B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI_CODE_FILE", "UI_CODE_FILE\UI_CODE_FILE.csproj", "{A7712BA4-B148-440A-9715-8C2EFBC2C472}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{C4F7F643-FFC4-4892-A537-EFEF0A1191B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4F7F643-FFC4-4892-A537-EFEF0A1191B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4F7F643-FFC4-4892-A537-EFEF0A1191B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7712BA4-B148-440A-9715-8C2EFBC2C472}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7712BA4-B148-440A-9715-8C2EFBC2C472}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7712BA4-B148-440A-9715-8C2EFBC2C472}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7712BA4-B148-440A-9715-8C2EFBC2C472}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
