@@ -20,7 +20,7 @@ namespace SimpleLibraryAPI.Models
 
         public int MaxStock { get; set; }
 
-        public List<int> CurrentBorrowerIds { get; set; } = new List<int>();
+        public List<string> CurrentBorrowerLibraryCard { get; set; } = new List<string>();
     }
 
     public class AddBookRequest
@@ -45,20 +45,7 @@ namespace SimpleLibraryAPI.Models
         public string Action { get; set; } = string.Empty;
         public string BookTitle { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
-        public int BorrowerId { get; set; }
+        public string BorrowerLibCard { get; set; }
         public string Details { get; set; } = string.Empty;
-    }
-
-    public class User
-    {
-        // User model to represent library users
-        public int UserId { get; set; }
-        public string FullName { get; set; } = string.Empty;
-        public string LibraryCard { get; set; } = string.Empty;
-    }
-    public class AddUserRequest
-    {
-        // The user ONLY provides their name.
-        public string FullName { get; set; }
     }
 }

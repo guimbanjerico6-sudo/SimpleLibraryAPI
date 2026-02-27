@@ -2,15 +2,17 @@
   {
     "BookTitle": "naruto",
     "Author": "kishimoto",
-    "Stock": 104,
+    "Stock": 110,
     "MaxStock": 110,
-    "CurrentBorrowerIds": [
-      1,
-      1,
-      2,
-      3,
-      6,
-      4
+    "CurrentBorrowerLibraryCard": []
+  },
+  {
+    "BookTitle": "harry potter",
+    "Author": "gabe",
+    "Stock": 19,
+    "MaxStock": 20,
+    "CurrentBorrowerLibraryCard": [
+      "LIB-0001"
     ]
   }
 ]

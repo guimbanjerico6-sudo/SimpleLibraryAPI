@@ -71,53 +71,80 @@ namespace SimpleLibraryAPI.Services
             return true;
         }
 
-        public void BorrowBook(string title, string userName, string cardNum)
+        public void BorrowBook(string libraryCard, string title)
         {
-            var book = _repository.GetBookByTitle(title);
-
-            if (book == null) throw new ArgumentException($"Book '{title}' not found.");
-
-            if (book.Stock <= 0)
+            if (string.IsNullOrWhiteSpace(libraryCard))
             {
-                throw new ArgumentException("This book is currently out of stock.");
+                throw new ArgumentException("Library card cannot be empty.");
             }
-            
-            var borrower = _repository.GetAllUsers()
-                .FirstOrDefault(u => u.FullName.Equals(userName, StringComparison.OrdinalIgnoreCase) 
-                                  && u.LibraryCard.Equals(cardNum, StringComparison.OrdinalIgnoreCase));
+
+            User borrower = _repository.GetUserByLibraryCard(libraryCard);
+
+
             if (borrower == null)
             {
-                throw new ArgumentException("User not found with the provided name and library card number.");
+                throw new ArgumentException($"No user found with Library Card: {libraryCard}");
+            }
+
+            var allLogs = _repository.GetHistory();
+
+            var lastBookAction = allLogs
+                .Where(log => log.BorrowerLibCard == libraryCard && log.BookTitle == title)
+                .OrderByDescending(log => log.Timestamp) 
+                .FirstOrDefault(); 
+
+            if (lastBookAction != null && lastBookAction.Action == "Borrow")
+            {
+                throw new Exception($"Access Denied: You are already borrowing '{title}'. Please return it first.");
             }
 
 
-            book.Stock--;
-            book.CurrentBorrowerIds.Add(borrower.UserId);
+            var book = _repository.GetBookByTitle(title);
+            if (book == null)
+            {
+                throw new ArgumentException($"Book '{title}' not found.");
+            }
 
-            _repository.SaveChanges(); 
-            LogActivity("Borrow", title, $"Borrowed by {borrower.FullName}", borrower.UserId);
+            book.Stock--;
+            book.CurrentBorrowerLibraryCard.Add(borrower.LibraryCard);
+
+            _repository.SaveChanges();
+            LogActivity("Borrow", title, $"Borrowed by {borrower.FullName}", borrower.LibraryCard);
+
         }
 
-        public void ReturnBook(string title, int userId)
+        public void ReturnBook(string libraryCard, string title)
         {
-            var book = _repository.GetBookByTitle(title);
-            if (book == null) throw new ArgumentException($"Book '{title}' not found.");
+            if (string.IsNullOrWhiteSpace(libraryCard))
+            {
+                throw new ArgumentException("Library card cannot be empty.");
+            }
+            User CurrentBorrower = _repository.GetUserByLibraryCard(libraryCard);
 
-            if (!book.CurrentBorrowerIds.Contains(userId))
+            if (CurrentBorrower == null)
+            {
+                throw new ArgumentException($"No user found with Library Card: {libraryCard}");
+            }
+            var book = _repository.GetBookByTitle(title);
+            if (book == null)
+            {
+                throw new ArgumentException($"Book '{title}' not found.");
+            }
+            if (!book.CurrentBorrowerLibraryCard.Contains(libraryCard))
             {
                 throw new ArgumentException("This user does not have this book.");
             }
 
             book.Stock++;
-            book.CurrentBorrowerIds.Remove(userId);
-
+            book.CurrentBorrowerLibraryCard.Remove(libraryCard);
             _repository.SaveChanges();
-            LogActivity("Return", title, $"Returned by User ID: {userId}", userId);
+            LogActivity("Return", title, $"Returned Libraty card ID: {libraryCard}", libraryCard);
         }
 
 
         public string AddUser(string name)
         {
+            // 1. FRONT DOOR BOUNCER (Restored from your original code)
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentException("User name cannot be empty.");
@@ -126,13 +153,19 @@ namespace SimpleLibraryAPI.Services
             var users = _repository.GetAllUsers();
             string newCardNum;
 
-            if (!users.Any())
+            var validUsers = users.Where(u =>
+                !string.IsNullOrWhiteSpace(u.LibraryCard) &&
+                u.LibraryCard.Length > 4 &&
+                u.LibraryCard.StartsWith("LIB-")
+            ).ToList();
+
+            if (!validUsers.Any())
             {
                 newCardNum = "LIB-0001";
             }
             else
             {
-                int currentMax = users.Max(u => int.Parse(u.LibraryCard.Substring(4)));
+                int currentMax = validUsers.Max(u => int.Parse(u.LibraryCard.Substring(4)));
                 newCardNum = $"LIB-{(currentMax + 1).ToString("D4")}";
             }
 
@@ -146,17 +179,21 @@ namespace SimpleLibraryAPI.Services
             };
 
             _repository.AddUser(newUser);
+
             return newCardNum;
         }
 
-        private void LogActivity(string action, string title, string details, int? userId = null)
+        private void LogActivity(string action, string title, string details, string libCard = null)
         {
             var log = new ActivityLog
             {
                 Action = action,
                 BookTitle = title,
                 Timestamp = DateTime.Now,
-                BorrowerId = userId ?? 0,
+
+                // This works perfectly now! Both sides are strings.
+                BorrowerLibCard = libCard ?? "None",
+
                 Details = details
             };
             _repository.AddLog(log);

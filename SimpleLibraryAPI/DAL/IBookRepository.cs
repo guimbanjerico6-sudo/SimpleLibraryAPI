@@ -10,6 +10,7 @@ namespace SimpleLibraryAPI.DAL
         List<ActivityLog> GetHistory();
         Book? GetBookByTitle(string title);                                                                                                                 
         User? GetUserByCard(string cardNum);
+        User GetUserByLibraryCard(string libraryCard);
 
         // --- WRITE OPERATIONS ---
         void SaveChanges();

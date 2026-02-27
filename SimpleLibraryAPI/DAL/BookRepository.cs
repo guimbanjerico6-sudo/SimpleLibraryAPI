@@ -50,6 +50,10 @@ namespace SimpleLibraryAPI.DAL
 
         public User? GetUserByCard(string cardNum) =>
             _users.FirstOrDefault(u => u.LibraryCard == cardNum);
+        public User GetUserByLibraryCard(string libraryCard)
+        {
+            return _users.FirstOrDefault(u => u.LibraryCard == libraryCard);
+        }
 
         // --- MODIFIERS ---
         public void AddBook(Book book)

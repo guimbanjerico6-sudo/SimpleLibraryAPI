@@ -51,7 +51,7 @@ namespace SimpleLibraryAPI.Controllers
                 Author = request.Author,
                 Stock = request.Stock,
                 MaxStock = request.Stock, // Default logic
-                CurrentBorrowerIds = new List<int>()
+                CurrentBorrowerLibraryCard = new List<string>()
             };
 
             try
@@ -120,36 +120,27 @@ namespace SimpleLibraryAPI.Controllers
             return Ok("Book deleted successfully.");
         }
 
-        [HttpPut("borrow/{title}")]
-        public IActionResult Borrow(string title, [FromQuery] string userName, [FromQuery] string cardNum)
+        [HttpPut("{libraryCard}/borrow")]
+        public IActionResult BorrowBook(string libraryCard, string title)
         {
-            // 1. Basic Validation
-            if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(cardNum))
-                return BadRequest("User name and Card Number are required.");
-
             try
             {
-                _bookService.BorrowBook(title, userName, cardNum);
-
-                return Ok(new
-                {
-                    Message = $"Book borrowed successfully by {userName}!",
-                    Details = _bookService.GetByTitle(title)
-                });
+                // We pass the string directly to the Service
+                _bookService.BorrowBook(libraryCard, title);
+                return Ok($"Successfully borrowed book for card {libraryCard}.");
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                if (ex.Message.Contains("not found")) return NotFound(ex.Message);
                 return BadRequest(ex.Message);
             }
         }
 
-        [HttpPut("Return/{title}")]
-        public IActionResult Return(string title, [FromQuery] int userId)
+        [HttpPut("Return/{librarycard}")]
+        public IActionResult Return(string librarycard, string title)
         {
             try
             {
-                _bookService.ReturnBook(title, userId);
+                _bookService.ReturnBook(librarycard, title);
 
                 return Ok(new
                 {

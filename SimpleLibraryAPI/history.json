@@ -3,42 +3,154 @@
     "Action": "Borrow",
     "BookTitle": "naruto",
     "Timestamp": "2026-02-18T18:15:08.3353816+08:00",
-    "BorrowerId": 3,
+    "BorrowerLibCard": null,
     "Details": "Borrowed by kevin"
   },
   {
     "Action": "Add",
     "BookTitle": "makibao",
     "Timestamp": "2026-02-24T13:49:10.8163339+08:00",
-    "BorrowerId": 0,
+    "BorrowerLibCard": null,
     "Details": "New book added to library."
   },
   {
     "Action": "Delete",
     "BookTitle": "makibao",
     "Timestamp": "2026-02-24T17:36:57.1363846+08:00",
-    "BorrowerId": 0,
+    "BorrowerLibCard": null,
     "Details": "Book removed from inventory."
   },
   {
     "Action": "Admin Expansion",
     "BookTitle": "naruto",
     "Timestamp": "2026-02-24T17:38:33.283511+08:00",
-    "BorrowerId": 0,
+    "BorrowerLibCard": null,
     "Details": "Inventory expanded by 10 copies."
   },
   {
     "Action": "Borrow",
     "BookTitle": "naruto",
     "Timestamp": "2026-02-24T17:39:05.9429107+08:00",
-    "BorrowerId": 6,
+    "BorrowerLibCard": null,
     "Details": "Borrowed by ff"
   },
   {
     "Action": "Borrow",
     "BookTitle": "naruto",
     "Timestamp": "2026-02-24T18:36:51.9939005+08:00",
-    "BorrowerId": 4,
+    "BorrowerLibCard": null,
     "Details": "Borrowed by eco"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T08:41:04.678246+08:00",
+    "BorrowerLibCard": null,
+    "Details": "Returned by User ID: 4"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T08:41:18.1000952+08:00",
+    "BorrowerLibCard": null,
+    "Details": "Returned by User ID: 3"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T08:41:21.1185333+08:00",
+    "BorrowerLibCard": null,
+    "Details": "Returned by User ID: 2"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T08:41:24.1568024+08:00",
+    "BorrowerLibCard": null,
+    "Details": "Returned by User ID: 1"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T08:41:34.7097996+08:00",
+    "BorrowerLibCard": null,
+    "Details": "Returned by User ID: 1"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T08:41:38.4156396+08:00",
+    "BorrowerLibCard": null,
+    "Details": "Returned by User ID: 6"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T10:26:22.6762182+08:00",
+    "BorrowerLibCard": "LIB-0002",
+    "Details": "Borrowed by Jerico D. Guimban"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T10:26:25.3339993+08:00",
+    "BorrowerLibCard": "LIB-0002",
+    "Details": "Borrowed by Jerico D. Guimban"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T10:31:45.1179589+08:00",
+    "BorrowerLibCard": "LIB-0003",
+    "Details": "Borrowed by kevin"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T10:32:00.0718785+08:00",
+    "BorrowerLibCard": "LIB-0003",
+    "Details": "Returned Libraty card ID: LIB-0003"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T10:32:09.8037255+08:00",
+    "BorrowerLibCard": "LIB-0002",
+    "Details": "Returned Libraty card ID: LIB-0002"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T10:32:11.8224218+08:00",
+    "BorrowerLibCard": "LIB-0002",
+    "Details": "Returned Libraty card ID: LIB-0002"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T10:33:43.7757193+08:00",
+    "BorrowerLibCard": "LIB-0005",
+    "Details": "Borrowed by ec"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-02-27T10:35:43.668086+08:00",
+    "BorrowerLibCard": "LIB-0005",
+    "Details": "Returned Libraty card ID: LIB-0005"
+  },
+  {
+    "Action": "Add",
+    "BookTitle": "harry potter",
+    "Timestamp": "2026-02-27T11:34:16.4399435+08:00",
+    "BorrowerLibCard": "None",
+    "Details": "New book added to library."
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "harry potter",
+    "Timestamp": "2026-02-27T11:34:42.9624248+08:00",
+    "BorrowerLibCard": "LIB-0001",
+    "Details": "Borrowed by Jerico D. Guimban"
   }
 ]

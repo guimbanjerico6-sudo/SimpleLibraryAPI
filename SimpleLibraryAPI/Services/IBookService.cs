@@ -15,8 +15,8 @@ namespace SimpleLibraryAPI.Services
         void AddBook(Book newBook);
         Book? AdminExpansion(string title, int amountToAdd);
         bool DeleteBook(string title);
-        void BorrowBook(string title, string userName, string cardNum);
-        void ReturnBook(string title, int userId);
+        void BorrowBook(string libraryCard,string title);
+        void ReturnBook(string libraryCard, string title);
         string AddUser(string name);
     }
 }
