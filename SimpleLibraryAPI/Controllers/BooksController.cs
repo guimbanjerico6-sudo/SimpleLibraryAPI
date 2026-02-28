@@ -24,9 +24,15 @@ namespace SimpleLibraryAPI.Controllers
         [HttpGet("{title}")]
         public IActionResult Get(string title)
         {
-            var book = _bookService.GetByTitle(title);
-            if (book == null) return NotFound($"Book '{title}' not found.");
-            return Ok(book);
+            try
+            {
+                var book = _bookService.GetByTitle(title);
+                return Ok(book);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("author")]

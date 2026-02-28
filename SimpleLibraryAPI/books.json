@@ -9,10 +9,8 @@
   {
     "BookTitle": "harry potter",
     "Author": "gabe",
-    "Stock": 19,
+    "Stock": 20,
     "MaxStock": 20,
-    "CurrentBorrowerLibraryCard": [
-      "LIB-0001"
-    ]
+    "CurrentBorrowerLibraryCard": []
   }
 ]

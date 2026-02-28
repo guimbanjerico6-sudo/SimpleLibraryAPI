@@ -2,43 +2,36 @@
   {
     "UserId": 1,
     "FullName": "Jerico D. Guimban",
-    "LibraryCard": "LIB-0001",
-    "Activity": []
+    "LibraryCard": "LIB-0001"
   },
   {
     "UserId": 2,
     "FullName": "Jerico D. Guimban",
-    "LibraryCard": "LIB-0002",
-    "Activity": []
+    "LibraryCard": "LIB-0002"
   },
   {
     "UserId": 3,
     "FullName": "kevin",
-    "LibraryCard": "LIB-0003",
-    "Activity": []
+    "LibraryCard": "LIB-0003"
   },
   {
     "UserId": 4,
     "FullName": "eco",
-    "LibraryCard": "LIB-0004",
-    "Activity": []
+    "LibraryCard": "LIB-0004"
   },
   {
     "UserId": 5,
     "FullName": "ec",
-    "LibraryCard": "LIB-0005",
-    "Activity": []
+    "LibraryCard": "LIB-0005"
   },
   {
     "UserId": 6,
     "FullName": "ff",
-    "LibraryCard": "af",
-    "Activity": []
+    "LibraryCard": "af"
   },
   {
     "UserId": 7,
     "FullName": "ace casera",
-    "LibraryCard": "LIB-0006",
-    "Activity": []
+    "LibraryCard": "LIB-0006"
   }
 ]

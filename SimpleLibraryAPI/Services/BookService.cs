@@ -16,7 +16,16 @@ namespace SimpleLibraryAPI.Services
         public List<Book> GetBooks() => _repository.GetAllBooks();
         public List<User> GetAllUsers() => _repository.GetAllUsers();
         public List<ActivityLog> GetHistory() => _repository.GetHistory();
-        public Book? GetByTitle(string title) => _repository.GetBookByTitle(title);
+        public Book? GetByTitle(string title)
+        {
+            var book = _repository.GetBookByTitle(title);
+            
+            if(book == null)
+            {
+                throw new ArgumentException($"Book '{title}' not found.");
+            }
+            return book;
+        }
 
         public List<Book> GetByAuthor(string author) =>
             _repository.GetAllBooks()
@@ -89,7 +98,8 @@ namespace SimpleLibraryAPI.Services
             var allLogs = _repository.GetHistory();
 
             var lastBookAction = allLogs
-                .Where(log => log.BorrowerLibCard == libraryCard && log.BookTitle == title)
+                .Where(log => log.BorrowerLibCard == libraryCard &&
+                log.BookTitle.Equals(title, StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(log => log.Timestamp) 
                 .FirstOrDefault(); 
 
