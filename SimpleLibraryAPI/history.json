@@ -271,5 +271,75 @@
     "Timestamp": "2026-02-28T13:00:11.6088244+08:00",
     "BorrowerLibCard": "LIB-0002",
     "Details": "Returned Libraty card ID: LIB-0002"
+  },
+  {
+    "Action": "Add",
+    "BookTitle": "dragonball",
+    "Timestamp": "2026-03-01T00:11:35.6036219+08:00",
+    "BorrowerLibCard": "None",
+    "Details": "New book added to library."
+  },
+  {
+    "Action": "Delete",
+    "BookTitle": "dragonball",
+    "Timestamp": "2026-03-01T00:15:43.8754453+08:00",
+    "BorrowerLibCard": "None",
+    "Details": "Book removed from inventory."
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-03-01T00:16:11.7612244+08:00",
+    "BorrowerLibCard": "LIB-0001",
+    "Details": "Borrowed by Jerico D. Guimban"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "harry potter",
+    "Timestamp": "2026-03-01T00:16:24.8885957+08:00",
+    "BorrowerLibCard": "LIB-0001",
+    "Details": "Borrowed by Jerico D. Guimban"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-03-01T00:16:30.737218+08:00",
+    "BorrowerLibCard": "LIB-0001",
+    "Details": "Returned Libraty card ID: LIB-0001"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "harry potter",
+    "Timestamp": "2026-03-01T00:16:32.8517973+08:00",
+    "BorrowerLibCard": "LIB-0001",
+    "Details": "Returned Libraty card ID: LIB-0001"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-03-01T00:26:34.0860753+08:00",
+    "BorrowerLibCard": "LIB-0007",
+    "Details": "Borrowed by kimmy"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "harry potter",
+    "Timestamp": "2026-03-01T00:26:39.5018705+08:00",
+    "BorrowerLibCard": "LIB-0007",
+    "Details": "Borrowed by kimmy"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "harry potter",
+    "Timestamp": "2026-03-01T00:26:42.7963325+08:00",
+    "BorrowerLibCard": "LIB-0007",
+    "Details": "Returned Libraty card ID: LIB-0007"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-03-01T00:26:44.8552533+08:00",
+    "BorrowerLibCard": "LIB-0007",
+    "Details": "Returned Libraty card ID: LIB-0007"
   }
 ]

@@ -33,5 +33,10 @@
     "UserId": 7,
     "FullName": "ace casera",
     "LibraryCard": "LIB-0006"
+  },
+  {
+    "UserId": 8,
+    "FullName": "kimmy",
+    "LibraryCard": "LIB-0007"
   }
 ]
