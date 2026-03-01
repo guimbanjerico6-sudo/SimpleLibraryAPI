@@ -7,17 +7,21 @@ namespace SimpleLibraryAPI
             var builder = WebApplication.CreateBuilder(args);
 
             // --- DEPENDENCY INJECTION (The Matchmakers) ---
-
-            // (Optional: Leave this if you are still using the ProductService from earlier!)
             builder.Services.AddSingleton<SimpleLibraryAPI.Services.ProductService>();
-
-            // 1. The DAL Matchmaker (Contract -> Implementation)
             builder.Services.AddSingleton<SimpleLibraryAPI.DAL.IBookRepository, SimpleLibraryAPI.DAL.BookRepository>();
-
-            // 2. The Service Matchmaker (Contract -> Implementation)
             builder.Services.AddSingleton<SimpleLibraryAPI.Services.IBookService, SimpleLibraryAPI.Services.BookService>();
 
-            // ----------------------------------------------
+            // --- THE VIP LIST (CORS) ---
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowReactApp",
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:5173") // Your React Frontend
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                    });
+            });
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -36,30 +40,30 @@ namespace SimpleLibraryAPI
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-                // In development, it's okay to see the full error for debugging
                 app.UseDeveloperExceptionPage();
             }
             else
             {
-                // In PRODUCTION, we use the Safety Net
                 app.UseExceptionHandler(errorApp =>
                 {
                     errorApp.Run(async context =>
                     {
-                        context.Response.StatusCode = 500; // Professional "Internal Server Error"
+                        context.Response.StatusCode = 500;
                         context.Response.ContentType = "application/json";
-
-                        // We send back a clean, polite message
                         var errorResponse = new { message = "An unexpected error occurred. Our engineers are on it!" };
                         await context.Response.WriteAsJsonAsync(errorResponse);
                     });
                 });
             }
 
+            // --- ACTIVATE THE VIP LIST ---
+            app.UseCors("AllowReactApp"); // Must be before Authorization!
+
             app.UseHttpsRedirection();
             app.UseAuthorization();
-
             app.MapControllers();
+
+            // Your custom error handler
             app.UseMiddleware<ExceptionMiddleware>();
 
             app.Run();

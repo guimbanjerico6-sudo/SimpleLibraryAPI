@@ -341,5 +341,40 @@
     "Timestamp": "2026-03-01T00:26:44.8552533+08:00",
     "BorrowerLibCard": "LIB-0007",
     "Details": "Returned Libraty card ID: LIB-0007"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-03-01T09:57:25.973022+08:00",
+    "BorrowerLibCard": "LIB-0007",
+    "Details": "Borrowed by kimmy"
+  },
+  {
+    "Action": "Borrow",
+    "BookTitle": "harry potter",
+    "Timestamp": "2026-03-01T09:57:28.8618949+08:00",
+    "BorrowerLibCard": "LIB-0007",
+    "Details": "Borrowed by kimmy"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "harry potter",
+    "Timestamp": "2026-03-01T09:57:33.8379802+08:00",
+    "BorrowerLibCard": "LIB-0007",
+    "Details": "Returned Libraty card ID: LIB-0007"
+  },
+  {
+    "Action": "Return",
+    "BookTitle": "naruto",
+    "Timestamp": "2026-03-01T09:57:36.8028833+08:00",
+    "BorrowerLibCard": "LIB-0007",
+    "Details": "Returned Libraty card ID: LIB-0007"
+  },
+  {
+    "Action": "Add",
+    "BookTitle": "lord of the rings",
+    "Timestamp": "2026-03-01T10:07:36.0896021+08:00",
+    "BorrowerLibCard": "None",
+    "Details": "New book added to library."
   }
 ]

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
@@ -7,12 +7,11 @@ function App() {
   const [users, setUsers] = useState([]);
   const [history, setHistory] = useState([]);
   const [activeCard, setActiveCard] = useState(''); 
-  
-  // Search & Admin States
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-  const [amountToAdd, setAmountToAdd] = useState(5);
+  
+  // UI States
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   // Form States
   const [newTitle, setNewTitle] = useState('');
@@ -22,62 +21,42 @@ function App() {
 
   const API_URL = 'https://localhost:7046/api/books'; 
 
-  // --- API CALLS ---
-  const fetchBooks = () => {
-    // If search is empty, get all. If searching, use the Author filter from your Controller!
-    const url = searchQuery 
-      ? `${API_URL}/author?name=${encodeURIComponent(searchQuery)}` 
-      : API_URL;
-      
-    fetch(url).then(res => res.json()).then(data => setBooks(data)).catch(console.error);
+  // --- CUSTOM TOAST NOTIFICATIONS ---
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
   };
 
+  // --- API CALLS ---
+  const fetchBooks = () => {
+    const url = searchQuery ? `${API_URL}/author?name=${encodeURIComponent(searchQuery)}` : API_URL;
+    fetch(url).then(res => res.json()).then(setBooks).catch(console.error);
+  };
   const fetchUsers = () => fetch(`${API_URL}/users`).then(res => res.json()).then(setUsers).catch(console.error);
   const fetchHistory = () => fetch(`${API_URL}/history`).then(res => res.json()).then(setHistory).catch(console.error);
 
   useEffect(() => { fetchBooks(); fetchUsers(); fetchHistory(); }, [searchQuery]);
 
-  // --- CORE ACTIONS (BORROW/RETURN/DELETE) ---
+  // --- CORE ACTIONS ---
   const handleBorrow = (title) => {
-    if (!activeCard) return alert("Enter a Library Card!");
+    if (!activeCard) return showToast("Please enter your Library Card above!", "error");
     fetch(`${API_URL}/${activeCard}/borrow?title=${encodeURIComponent(title)}`, { method: 'PUT' })
-      .then(async res => { if (!res.ok) throw new Error(await res.text()); fetchBooks(); fetchHistory(); })
-      .catch(err => alert(err.message));
+      .then(async res => { if (!res.ok) throw new Error(await res.text()); showToast(`Borrowed ${title}!`); fetchBooks(); fetchHistory(); })
+      .catch(err => showToast(err.message, "error"));
   };
 
   const handleReturn = (title) => {
-    if (!activeCard) return alert("Enter a Library Card!");
+    if (!activeCard) return showToast("Please enter your Library Card above!", "error");
     fetch(`${API_URL}/Return/${activeCard}?title=${encodeURIComponent(title)}`, { method: 'PUT' })
-      .then(async res => { if (!res.ok) throw new Error(await res.text()); fetchBooks(); fetchHistory(); })
-      .catch(err => alert(err.message));
+      .then(async res => { if (!res.ok) throw new Error(await res.text()); showToast(`Returned ${title}!`); fetchBooks(); fetchHistory(); })
+      .catch(err => showToast(err.message, "error"));
   };
 
   const handleDelete = (title) => {
-    if (!window.confirm(`Delete ${title}?`)) return;
-    fetch(`${API_URL}/${encodeURIComponent(title)}`, { method: 'DELETE' }).then(() => fetchBooks()).catch(console.error);
-  };
-
-  // --- ADMIN INVENTORY EXPANSION (The PUT Admin route) ---
-  const handleAdminUpdate = (title) => {
-    fetch(`${API_URL}/admin/inventory/${encodeURIComponent(title)}?amountToAdd=${amountToAdd}`, {
-      method: 'PUT',
-      headers: { 'X-Admin-Password': adminPassword }
-    })
-    .then(async res => {
-      if (!res.ok) throw new Error(await res.text());
-      alert("Inventory Expanded!");
-      fetchBooks();
-    })
-    .catch(err => alert(`Admin Error: ${err.message}`));
-  };
-
-  const handleAddUser = (e) => {
-    e.preventDefault();
-    fetch(`${API_URL}/user`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fullName: newUserName })
-    }).then(res => res.json()).then(data => { alert(`Card: ${data.cardNumber}`); fetchUsers(); setNewUserName(''); });
+    if (!window.confirm(`Permanently delete ${title}?`)) return;
+    fetch(`${API_URL}/${encodeURIComponent(title)}`, { method: 'DELETE' })
+      .then(() => { showToast("Book deleted."); fetchBooks(); })
+      .catch(console.error);
   };
 
   const handleAddBook = (e) => {
@@ -86,86 +65,137 @@ function App() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bookTitle: newTitle, author: newAuthor, stock: parseInt(newStock) })
-    }).then(() => { fetchBooks(); setNewTitle(''); setNewAuthor(''); }).catch(console.error);
+    }).then(async res => {
+      if (!res.ok) throw new Error(await res.text());
+      showToast("Book successfully added to library!");
+      fetchBooks(); setShowAddModal(false); setNewTitle(''); setNewAuthor(''); setNewStock(1);
+    }).catch(err => showToast(err.message, "error"));
+  };
+
+  const handleAddUser = (e) => {
+    e.preventDefault();
+    fetch(`${API_URL}/user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fullName: newUserName })
+    }).then(res => res.json()).then(data => { 
+      showToast(`User registered! Card: ${data.cardNumber}`); 
+      fetchUsers(); setNewUserName(''); 
+    }).catch(err => showToast(err.message, "error"));
   };
 
   return (
     <div className="dashboard">
+      {/* Toast Notification Container */}
+      {toast.show && <div className={`toast ${toast.type}`}>{toast.message}</div>}
+
       <div className="header">
-        <h1>📚 Complete Library System</h1>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '15px' }}>
-          <button className={`btn ${activeTab === 'library' ? 'btn-primary' : ''}`} onClick={() => setActiveTab('library')}>Library</button>
-          <button className={`btn ${activeTab === 'users' ? 'btn-primary' : ''}`} onClick={() => setActiveTab('users')}>Users</button>
-          <button className={`btn ${activeTab === 'history' ? 'btn-primary' : ''}`} onClick={() => setActiveTab('history')}>Logs</button>
-          <button className={`btn ${isAdmin ? 'btn-danger' : ''}`} onClick={() => setIsAdmin(!isAdmin)}>Admin Mode: {isAdmin ? 'ON' : 'OFF'}</button>
+        <h1>Nexus Library System</h1>
+        <div className="nav-tabs glass-panel">
+          <button className={`nav-btn ${activeTab === 'library' ? 'active' : ''}`} onClick={() => setActiveTab('library')}>📚 Collection</button>
+          <button className={`nav-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>👥 Members</button>
+          <button className={`nav-btn ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>⏱️ Activity Log</button>
         </div>
       </div>
 
+      {/* --- TAB 1: LIBRARY --- */}
       {activeTab === 'library' && (
         <>
-          {isAdmin && (
-            <div className="panel" style={{border: '2px solid #dc3545'}}>
-              <h3>🛡️ Admin Control Panel</h3>
-              <div className="form-row">
-                <input type="password" placeholder="Admin Password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
-                <input type="number" placeholder="Amt to add" value={amountToAdd} onChange={e => setAmountToAdd(e.target.value)} style={{maxWidth: '120px'}} />
-                <p style={{fontSize: '0.8em'}}>Click "Expand" on any book below to use this password.</p>
-              </div>
+          <div className="control-bar glass-panel">
+            <input type="text" className="input-field search-box" placeholder="🔍 Search by Author..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            
+            <div style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
+              <span style={{color: 'var(--text-muted)'}}>Active Card:</span>
+              <input type="text" className="input-field" placeholder="ID Number" value={activeCard} onChange={e => setActiveCard(e.target.value)} style={{width: '120px'}} />
+              <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>➕ New Book</button>
             </div>
-          )}
-
-          <div className="library-card-login">
-            <input type="text" placeholder="🔍 Search by Author..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{marginRight: '20px', width: '200px'}} />
-            <strong>🆔 Active Card:</strong>
-            <input type="text" value={activeCard} onChange={e => setActiveCard(e.target.value)} style={{width: '150px'}} />
-          </div>
-
-          <div className="panel">
-            <h3>➕ Add Book</h3>
-            <form onSubmit={handleAddBook} className="form-row">
-              <input type="text" placeholder="Title" value={newTitle} onChange={e => setNewTitle(e.target.value)} required />
-              <input type="text" placeholder="Author" value={newAuthor} onChange={e => setNewAuthor(e.target.value)} required />
-              <input type="number" value={newStock} onChange={e => setNewStock(e.target.value)} style={{width: '70px'}} />
-              <button type="submit" className="btn btn-primary">Save</button>
-            </form>
           </div>
 
           <div className="book-grid">
             {books.map(book => (
-              <div key={book.bookTitle} className="book-card">
+              <div key={book.bookTitle} className="book-card glass-panel">
                 <h3 className="book-title">{book.bookTitle}</h3>
-                <p className="book-author">By {book.author}</p>
-                <div className="book-stats">Stock: {book.stock} / {book.maxStock}</div>
+                <p className="book-author">{book.author}</p>
+                <div className="book-stats">
+                  <span>📦 Stock: {book.stock}/{book.maxStock}</span>
+                  <span>📖 Readers: {book.currentBorrowerLibraryCard?.length || 0}</span>
+                </div>
                 <div className="card-actions">
-                  <button className="btn btn-action" onClick={() => handleBorrow(book.bookTitle)}>Borrow</button>
-                  <button className="btn btn-action" onClick={() => handleReturn(book.bookTitle)}>Return</button>
-                  {isAdmin && <button className="btn btn-primary" onClick={() => handleAdminUpdate(book.bookTitle)}>Expand</button>}
-                  <button className="btn btn-danger" onClick={() => handleDelete(book.bookTitle)}>Delete</button>
+                  <button className="btn btn-success" style={{flex: 1}} onClick={() => handleBorrow(book.bookTitle)}>Borrow</button>
+                  <button className="btn btn-success" style={{flex: 1}} onClick={() => handleReturn(book.bookTitle)}>Return</button>
+                  <button className="btn btn-danger" onClick={() => handleDelete(book.bookTitle)}>🗑️</button>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Add Book Modal */}
+          {showAddModal && (
+            <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+              <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+                <h2>Add to Collection</h2>
+                <form onSubmit={handleAddBook} className="form-column">
+                  <input type="text" className="input-field" placeholder="Book Title" value={newTitle} onChange={e => setNewTitle(e.target.value)} required minLength="3" />
+                  <input type="text" className="input-field" placeholder="Author Name" value={newAuthor} onChange={e => setNewAuthor(e.target.value)} required minLength="3" />
+                  <input type="number" className="input-field" placeholder="Initial Stock" value={newStock} onChange={e => setNewStock(e.target.value)} required min="1" />
+                  <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
+                    <button type="button" className="btn btn-danger" style={{flex: 1}} onClick={() => setShowAddModal(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary" style={{flex: 2}}>Save Book</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </>
       )}
 
+      {/* --- TAB 2: USERS --- */}
       {activeTab === 'users' && (
-        <div className="panel">
-          <h2>Register User</h2>
-          <form onSubmit={handleAddUser} className="form-row">
-            <input type="text" placeholder="Full Name" value={newUserName} onChange={e => setNewUserName(e.target.value)} required />
-            <button type="submit" className="btn btn-action">Register</button>
+        <div className="glass-panel" style={{padding: '30px'}}>
+          <h2 style={{marginTop: 0}}>Register Member</h2>
+          <form onSubmit={handleAddUser} style={{display: 'flex', gap: '15px', marginBottom: '40px'}}>
+            <input type="text" className="input-field" style={{flex: 1}} placeholder="Full Legal Name" value={newUserName} onChange={e => setNewUserName(e.target.value)} required />
+            <button type="submit" className="btn btn-primary">Generate Card ID</button>
           </form>
-          <hr />
-          {users.map(u => <div key={u.libraryCard} style={{padding: '5px'}}><strong>{u.fullName}</strong> - <code>{u.libraryCard}</code></div>)}
+
+          <h3 style={{color: 'var(--text-muted)'}}>Active Members</h3>
+          <table className="data-table">
+            <tbody>
+              {users.map(u => (
+                <tr key={u.libraryCard}>
+                  <td style={{fontWeight: '600'}}>{u.fullName}</td>
+                  <td style={{textAlign: 'right'}}><code style={{background: 'rgba(0,0,0,0.3)', padding: '5px 10px', borderRadius: '4px', color: 'var(--accent)'}}>{u.libraryCard}</code></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
+      {/* --- TAB 3: HISTORY --- */}
       {activeTab === 'history' && (
-        <div className="panel">
-          <h2>Activity Log</h2>
-          {history.map((h, i) => <div key={i} style={{fontSize: '0.9em', borderBottom: '1px solid #eee', padding: '5px'}}>
-            [{new Date(h.timestamp).toLocaleTimeString()}] <b>{h.action}</b>: {h.bookTitle} (Card: {h.borrowerLibCard})
-          </div>)}
+        <div className="glass-panel" style={{padding: '30px'}}>
+          <h2 style={{marginTop: 0}}>System Logs</h2>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Action</th>
+                <th>Resource</th>
+                <th>User ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.slice().reverse().map((h, i) => (
+                <tr key={i}>
+                  <td>{new Date(h.timestamp).toLocaleString()}</td>
+                  <td><span style={{color: h.action === 'Borrow' ? 'var(--danger)' : 'var(--success)'}}>{h.action}</span></td>
+                  <td style={{fontWeight: '500'}}>{h.bookTitle}</td>
+                  <td><code style={{color: 'var(--text-muted)'}}>{h.borrowerLibCard}</code></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

@@ -12,5 +12,12 @@
     "Stock": 20,
     "MaxStock": 20,
     "CurrentBorrowerLibraryCard": []
+  },
+  {
+    "BookTitle": "lord of the rings",
+    "Author": "Tolkien",
+    "Stock": 100,
+    "MaxStock": 100,
+    "CurrentBorrowerLibraryCard": []
   }
 ]
